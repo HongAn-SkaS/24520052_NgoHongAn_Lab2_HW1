@@ -2,59 +2,18 @@
 import { validateDataGridProps } from "./data-grid-contract.js";
 
 const employeeData = [
-    {
-        id: "EMP-001",
-        name: "Alex Morgan",
-        department: "IT Support",
-        status: "Active"
-    },
-    {
-        id: "EMP-002",
-        name: "Jamie Lee",
-        department: "Infrastructure",
-        status: "Active"
-    },
-    {
-        id: "EMP-003",
-        name: "Taylor Smith",
-        department: "Security",
-        status: "Inactive"
-    },
-    {
-        id: "EMP-004",
-        name: "Jordan Kim",
-        department: "IT Support",
-        status: "Active"
-    },
-    {
-        id: "EMP-005",
-        name: "Casey Nguyen",
-        department: "Infrastructure",
-        status: "Inactive"
-    }
+    { id: "EMP-001", name: "Alex Morgan", department: "IT Support", status: "Active" },
+    { id: "EMP-002", name: "Jamie Lee", department: "Infrastructure", status: "Active" },
+    { id: "EMP-003", name: "Taylor Smith", department: "Security", status: "Inactive" },
+    { id: "EMP-004", name: "Jordan Kim", department: "IT Support", status: "Active" },
+    { id: "EMP-005", name: "Casey Nguyen", department: "Infrastructure", status: "Inactive" }
 ];
 
 const employeeColumns = [
-    {
-        header: "Employee ID",
-        accessorKey: "id",
-        sortable: true
-    },
-    {
-        header: "Name",
-        accessorKey: "name",
-        sortable: true
-    },
-    {
-        header: "Department",
-        accessorKey: "department",
-        sortable: true
-    },
-    {
-        header: "Status",
-        accessorKey: "status",
-        sortable: true
-    }
+    { header: "Employee ID", accessorKey: "id", sortable: true },
+    { header: "Name", accessorKey: "name", sortable: true },
+    { header: "Department", accessorKey: "department", sortable: true },
+    { header: "Status", accessorKey: "status", sortable: true }
 ];
 
 const grid = document.querySelector("#employee-grid");
@@ -71,11 +30,94 @@ const gridProps = {
     }
 };
 
+let sortState = {
+    key: null,
+    direction: "ascending"
+};
+
+function compareValues(firstValue, secondValue) {
+    if (firstValue == null && secondValue == null) {
+        return 0;
+    }
+
+    if (firstValue == null) {
+        return 1;
+    }
+
+    if (secondValue == null) {
+        return -1;
+    }
+
+    if (
+        typeof firstValue === "number" &&
+        typeof secondValue === "number"
+    ) {
+        return firstValue - secondValue;
+    }
+
+    return String(firstValue).localeCompare(
+        String(secondValue),
+        undefined,
+        {
+            numeric: true,
+            sensitivity: "base"
+        }
+    );
+}
+
+function getSortedData(data) {
+    if (sortState.key === null) {
+        return data;
+    }
+
+    const column = gridProps.columns.find(
+        (item) => item.accessorKey === sortState.key
+    );
+
+    if (!column || column.sortable !== true) {
+        return data;
+    }
+
+    const sortedData = [...data];
+
+    sortedData.sort((firstItem, secondItem) => {
+        const result = compareValues(
+            firstItem[column.accessorKey],
+            secondItem[column.accessorKey]
+        );
+
+        return sortState.direction === "ascending"
+            ? result
+            : -result;
+    });
+
+    return sortedData;
+}
+
+function handleSort(column) {
+    if (column.sortable !== true) {
+        return;
+    }
+
+    if (sortState.key === column.accessorKey) {
+        sortState.direction =
+            sortState.direction === "ascending"
+                ? "descending"
+                : "ascending";
+    } else {
+        sortState.key = column.accessorKey;
+        sortState.direction = "ascending";
+    }
+
+    renderDataGrid(gridProps);
+}
+
 function renderDataGrid(props) {
     const errors = validateDataGridProps(props);
 
     if (errors.length > 0) {
         gridStatus.textContent = errors.join(" ");
+        gridHead.replaceChildren();
         gridBody.replaceChildren();
         return;
     }
@@ -88,25 +130,65 @@ function renderDataGrid(props) {
 
         headerCell.scope = "col";
         headerCell.setAttribute("role", "columnheader");
-        headerCell.textContent = column.header;
+
+        if (sortState.key === column.accessorKey) {
+            headerCell.setAttribute(
+                "aria-sort",
+                sortState.direction
+            );
+        }
+
+        if (column.sortable === true) {
+            const sortButton = document.createElement("button");
+
+            sortButton.type = "button";
+
+            const isActive = sortState.key === column.accessorKey;
+
+            const arrow = !isActive
+                ? ""
+                : sortState.direction === "ascending"
+                    ? " ↑"
+                    : " ↓";
+
+            sortButton.textContent = column.header + arrow;
+
+            sortButton.setAttribute(
+                "aria-label",
+                isActive
+                    ? `Sort by ${column.header}. Currently ${sortState.direction}. Activate to reverse the order.`
+                    : `Sort by ${column.header} in ascending order.`
+            );
+
+            sortButton.addEventListener("click", () => {
+                handleSort(column);
+            });
+
+            headerCell.append(sortButton);
+        } else {
+            headerCell.textContent = column.header;
+        }
 
         headerRow.append(headerCell);
     }
 
     gridHead.replaceChildren(headerRow);
 
+    const sortedData = getSortedData(props.data);
     const rows = [];
 
-    for (const item of props.data) {
+    for (const [rowIndex, item] of sortedData.entries()) {
         const row = document.createElement("tr");
         row.setAttribute("role", "row");
 
-        for (const [index, column] of props.columns.entries()) {
+        for (const [columnIndex, column] of props.columns.entries()) {
             const cell = document.createElement("td");
             const value = item[column.accessorKey];
 
             cell.setAttribute("role", "gridcell");
-            cell.tabIndex = rows.length === 0 && index === 0 ? 0 : -1;
+            cell.tabIndex =
+                rowIndex === 0 && columnIndex === 0 ? 0 : -1;
+
             cell.textContent = value == null ? "" : String(value);
 
             row.append(cell);
@@ -117,7 +199,7 @@ function renderDataGrid(props) {
 
     gridBody.replaceChildren(...rows);
 
-    const count = props.data.length;
+    const count = sortedData.length;
 
     gridStatus.textContent =
         `${count} employee record${count === 1 ? "" : "s"} displayed.`;
