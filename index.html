@@ -1,0 +1,93 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <title>Employee Directory | Data-Grid</title>
+</head>
+<body>
+    <header>
+        <p>IT Operations</p>
+        <h1>Employee Directory</h1>
+        <p>Manage and review employee records.</p>
+    </header>
+
+    <main>
+        <section aria-labelledby="grid-heading">
+            <h2 id="grid-heading">Employee Records</h2>
+
+            <p id="grid-instructions">
+                Use the arrow keys to navigate grid cells.
+                Press Enter to select a record and Space to toggle its selection.
+            </p>
+
+            <table
+                id="employee-grid"
+                role="grid"
+                aria-label="Employee directory"
+                aria-describedby="grid-instructions"
+            >
+                <thead role="rowgroup">
+                    <tr role="row">
+                        <th scope="col" role="columnheader">
+                            Employee ID
+                        </th>
+                        <th scope="col" role="columnheader">
+                            Name
+                        </th>
+                        <th scope="col" role="columnheader">
+                            Department
+                        </th>
+                        <th scope="col" role="columnheader">
+                            Status
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody id="grid-body" role="rowgroup">
+                    <tr role="row">
+                        <td role="gridcell" tabindex="0">EMP-001</td>
+                        <td role="gridcell" tabindex="-1">Alex Morgan</td>
+                        <td role="gridcell" tabindex="-1">IT Support</td>
+                        <td role="gridcell" tabindex="-1">Active</td>
+                    </tr>
+                    <tr role="row">
+                        <td role="gridcell" tabindex="-1">EMP-002</td>
+                        <td role="gridcell" tabindex="-1">Jamie Lee</td>
+                        <td role="gridcell" tabindex="-1">Infrastructure</td>
+                        <td role="gridcell" tabindex="-1">Active</td>
+                    </tr>
+                    <tr role="row">
+                        <td role="gridcell" tabindex="-1">EMP-003</td>
+                        <td role="gridcell" tabindex="-1">Taylor Smith</td>
+                        <td role="gridcell" tabindex="-1">Security</td>
+                        <td role="gridcell" tabindex="-1">Inactive</td>
+                    </tr>
+                    <tr role="row">
+                        <td role="gridcell" tabindex="-1">EMP-004</td>
+                        <td role="gridcell" tabindex="-1">Jordan Kim</td>
+                        <td role="gridcell" tabindex="-1">IT Support</td>
+                        <td role="gridcell" tabindex="-1">Active</td>
+                    </tr>
+                    <tr role="row">
+                        <td role="gridcell" tabindex="-1">EMP-005</td>
+                        <td role="gridcell" tabindex="-1">Casey Nguyen</td>
+                        <td role="gridcell" tabindex="-1">Infrastructure</td>
+                        <td role="gridcell" tabindex="-1">Inactive</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p id="grid-status" role="status" aria-live="polite">
+                5 employee records displayed.
+            </p>
+        </section>
+    </main>
+
+    <footer>
+        <p>Employee Directory Data-Grid</p>
+    </footer>
+</body>
+</html>
