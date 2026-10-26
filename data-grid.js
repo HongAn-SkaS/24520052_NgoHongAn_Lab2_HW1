@@ -21,6 +21,11 @@ const gridHead = grid.querySelector("thead");
 const gridBody = document.querySelector("#grid-body");
 const gridStatus = document.querySelector("#grid-status");
 
+const gridFilter = document.querySelector("#grid-filter");
+
+let filterQuery = "";
+
+
 const gridProps = {
     data: employeeData,
     columns: employeeColumns,
@@ -65,6 +70,26 @@ function compareValues(firstValue, secondValue) {
     );
 }
 
+
+function getFilteredData(data, columns) {
+    if (filterQuery === "") {
+        return data;
+    }
+
+    return data.filter((item) =>
+        columns.some((column) => {
+            const value = item[column.accessorKey];
+
+            return value != null &&
+                String(value)
+                    .toLocaleLowerCase()
+                    .includes(filterQuery);
+        })
+    );
+}
+
+
+
 function getSortedData(data) {
     if (sortState.key === null) {
         return data;
@@ -93,6 +118,7 @@ function getSortedData(data) {
 
     return sortedData;
 }
+
 
 function handleSort(column) {
     if (column.sortable !== true) {
@@ -174,7 +200,10 @@ function renderDataGrid(props) {
 
     gridHead.replaceChildren(headerRow);
 
-    const sortedData = getSortedData(props.data);
+    
+    const filteredData = getFilteredData(props.data, props.columns);
+    const sortedData = getSortedData(filteredData);
+
     const rows = [];
 
     for (const [rowIndex, item] of sortedData.entries()) {
@@ -201,10 +230,22 @@ function renderDataGrid(props) {
 
     const count = sortedData.length;
 
-    gridStatus.textContent =
-        `${count} employee record${count === 1 ? "" : "s"} displayed.`;
+    gridStatus.textContent = filterQuery === ""
+    ? `${count} employee record${count === 1 ? "" : "s"} displayed.`
+    : `${count} matching employee record${count === 1 ? "" : "s"} found.`;
 }
 
 grid.setAttribute("aria-label", gridProps.ariaLabel);
+
+document.querySelector("#grid-filter-form")
+    .addEventListener("submit", (event) => {
+        event.preventDefault();
+    });
+
+gridFilter.addEventListener("input", () => {
+    filterQuery = gridFilter.value.trim().toLocaleLowerCase();
+    renderDataGrid(gridProps);
+});
+
 
 renderDataGrid(gridProps);

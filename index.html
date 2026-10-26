@@ -17,6 +17,17 @@
     <main>
         <section aria-labelledby="grid-heading">
             <h2 id="grid-heading">Employee Records</h2>
+            
+<form id="grid-filter-form" role="search" aria-label="Filter employee records">
+    <label for="grid-filter">Search employee records</label>
+    <input
+        id="grid-filter"
+        name="search"
+        type="search"
+        autocomplete="off"
+        placeholder="Search by ID, name, department, or status"
+    >
+</form>
 
             <p id="grid-instructions">
                 Use the arrow keys to navigate grid cells.
