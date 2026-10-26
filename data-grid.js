@@ -252,6 +252,16 @@ function renderDataGrid(props) {
         gridBody.replaceChildren();
         return;
     }
+    const activeElement = document.activeElement;
+
+const shouldRestoreCellFocus =
+    gridBody.contains(activeElement);
+
+const focusedHeaderIndex = gridHead.contains(activeElement)
+    ? Array.from(gridHead.querySelectorAll("th")).indexOf(
+        activeElement.closest("th")
+    )
+    : -1;
 
     const headerRow = document.createElement("tr");
     headerRow.setAttribute("role", "row");
@@ -301,6 +311,13 @@ function renderDataGrid(props) {
     }
 
     gridHead.replaceChildren(headerRow);
+    if (focusedHeaderIndex >= 0) {
+    const headerCells = gridHead.querySelectorAll("th");
+    const headerButton =
+        headerCells[focusedHeaderIndex]?.querySelector("button");
+
+    headerButton?.focus();
+}
 
     const filteredData = getFilteredData(props.data, props.columns);
     const sortedData = getSortedData(filteredData);
@@ -348,24 +365,22 @@ function renderDataGrid(props) {
 
     gridBody.replaceChildren(...rows);
 
-if (pagination.rows.length > 0) {
-    const targetCell = gridBody.querySelector(
-        `tr:nth-child(${focusedCell.rowIndex + 1}) td:nth-child(${focusedCell.columnIndex + 1})`
+if (shouldRestoreCellFocus && pagination.rows.length > 0) {
+    focusCell(
+        focusedCell.rowIndex,
+        focusedCell.columnIndex
     );
-
-    if (targetCell && grid.contains(document.activeElement)) {
-        targetCell.focus();
-    }
 }
 
-gridStatus.textContent = filterQuery === ""
-    ? `${pagination.totalRecords} employee record${pagination.totalRecords === 1 ? "" : "s"} found.`
-    : `${pagination.totalRecords} matching employee record${pagination.totalRecords === 1 ? "" : "s"} found.`;
-    pageInfo.textContent =
-        `Page ${currentPage} of ${pagination.totalPages}`;
-
-    previousPageButton.disabled = currentPage === 1;
-    nextPageButton.disabled = currentPage >= pagination.totalPages;
+if (pagination.totalRecords === 0) {
+    gridStatus.textContent = filterQuery === ""
+        ? "No employee records available."
+        : "No matching employee records found.";
+} else {
+    gridStatus.textContent = filterQuery === ""
+        ? `${pagination.totalRecords} employee record${pagination.totalRecords === 1 ? "" : "s"} found.`
+        : `${pagination.totalRecords} matching employee record${pagination.totalRecords === 1 ? "" : "s"} found.`;
+}
 }
 
 grid.setAttribute("aria-label", gridProps.ariaLabel);
@@ -459,7 +474,7 @@ case "End":
     event.preventDefault();
     focusCell(rowIndex, gridProps.columns.length - 1);
     break;
-    
+
         default:
             break;
     }
