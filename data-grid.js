@@ -21,6 +21,8 @@ const gridHead = grid.querySelector("thead");
 const gridBody = document.querySelector("#grid-body");
 const gridStatus = document.querySelector("#grid-status");
 
+const selectionStatus = document.querySelector("#selection-status");
+
 const gridFilter = document.querySelector("#grid-filter");
 
 const pageSizeSelect = document.querySelector("#page-size");
@@ -235,10 +237,9 @@ function selectRow(rowIndex, toggleSelection = false) {
         );
     }
 
-    gridStatus.textContent = selectedEmployeeIds.has(item.id)
-        ? `${item.name} selected.`
-        : `${item.name} deselected.`;
-
+    selectionStatus.textContent = selectedEmployeeIds.has(item.id)
+    ? `${item.name} selected.`
+    : `${item.name} deselected.`;
     gridProps.onRowSelect?.(item);
 }
 
