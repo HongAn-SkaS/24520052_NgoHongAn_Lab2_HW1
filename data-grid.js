@@ -347,10 +347,19 @@ function renderDataGrid(props) {
 
     gridBody.replaceChildren(...rows);
 
-    gridStatus.textContent = filterQuery === ""
-        ? `${pagination.totalRecords} employee record${pagination.totalRecords === 1 ? "" : "s"} found.`
-        : `${pagination.totalRecords} matching employee record${pagination.totalRecords === 1 ? "" : "s"} found.`;
+if (pagination.rows.length > 0) {
+    const targetCell = gridBody.querySelector(
+        `tr:nth-child(${focusedCell.rowIndex + 1}) td:nth-child(${focusedCell.columnIndex + 1})`
+    );
 
+    if (targetCell && grid.contains(document.activeElement)) {
+        targetCell.focus();
+    }
+}
+
+gridStatus.textContent = filterQuery === ""
+    ? `${pagination.totalRecords} employee record${pagination.totalRecords === 1 ? "" : "s"} found.`
+    : `${pagination.totalRecords} matching employee record${pagination.totalRecords === 1 ? "" : "s"} found.`;
     pageInfo.textContent =
         `Page ${currentPage} of ${pagination.totalPages}`;
 
