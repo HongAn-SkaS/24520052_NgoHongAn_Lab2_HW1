@@ -449,7 +449,17 @@ gridBody.addEventListener("keydown", (event) => {
             event.preventDefault();
             selectRow(rowIndex, true);
             break;
+        
+            case "Home":
+    event.preventDefault();
+    focusCell(rowIndex, 0);
+    break;
 
+case "End":
+    event.preventDefault();
+    focusCell(rowIndex, gridProps.columns.length - 1);
+    break;
+    
         default:
             break;
     }
