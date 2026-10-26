@@ -23,6 +23,16 @@ const gridStatus = document.querySelector("#grid-status");
 
 const gridFilter = document.querySelector("#grid-filter");
 
+
+const pageSizeSelect = document.querySelector("#page-size");
+const previousPageButton = document.querySelector("#previous-page");
+const nextPageButton = document.querySelector("#next-page");
+const pageInfo = document.querySelector("#page-info");
+
+let currentPage = 1;
+let pageSize = Number(pageSizeSelect.value);
+
+
 let filterQuery = "";
 
 
@@ -135,8 +145,29 @@ function handleSort(column) {
         sortState.direction = "ascending";
     }
 
+    currentPage = 1;
+    
     renderDataGrid(gridProps);
 }
+
+
+function getPaginatedData(data) {
+    const totalPages = Math.ceil(data.length / pageSize);
+    const safeTotalPages = Math.max(1, totalPages);
+
+    currentPage = Math.min(currentPage, safeTotalPages);
+    currentPage = Math.max(1, currentPage);
+
+    const startIndex = (currentPage - 1) * pageSize;
+
+    return {
+        rows: data.slice(startIndex, startIndex + pageSize),
+        totalPages: safeTotalPages,
+        totalRecords: data.length,
+        startIndex
+    };
+}
+
 
 function renderDataGrid(props) {
     const errors = validateDataGridProps(props);
@@ -201,12 +232,14 @@ function renderDataGrid(props) {
     gridHead.replaceChildren(headerRow);
 
     
-    const filteredData = getFilteredData(props.data, props.columns);
-    const sortedData = getSortedData(filteredData);
+    
+const filteredData = getFilteredData(props.data, props.columns);
+const sortedData = getSortedData(filteredData);
+const pagination = getPaginatedData(sortedData);
+const rows = [];
 
-    const rows = [];
 
-    for (const [rowIndex, item] of sortedData.entries()) {
+    for (const [rowIndex, item] of pagination.rows.entries())  {
         const row = document.createElement("tr");
         row.setAttribute("role", "row");
 
@@ -226,13 +259,19 @@ function renderDataGrid(props) {
         rows.push(row);
     }
 
-    gridBody.replaceChildren(...rows);
+    
+gridBody.replaceChildren(...rows);
 
-    const count = sortedData.length;
+gridStatus.textContent = filterQuery === ""
+    ? `${pagination.totalRecords} employee record${pagination.totalRecords === 1 ? "" : "s"} found.`
+    : `${pagination.totalRecords} matching employee record${pagination.totalRecords === 1 ? "" : "s"} found.`;
 
-    gridStatus.textContent = filterQuery === ""
-    ? `${count} employee record${count === 1 ? "" : "s"} displayed.`
-    : `${count} matching employee record${count === 1 ? "" : "s"} found.`;
+pageInfo.textContent =
+    `Page ${currentPage} of ${pagination.totalPages}`;
+
+previousPageButton.disabled = currentPage === 1;
+nextPageButton.disabled = currentPage >= pagination.totalPages;
+
 }
 
 grid.setAttribute("aria-label", gridProps.ariaLabel);
@@ -244,6 +283,26 @@ document.querySelector("#grid-filter-form")
 
 gridFilter.addEventListener("input", () => {
     filterQuery = gridFilter.value.trim().toLocaleLowerCase();
+    currentPage = 1;
+    renderDataGrid(gridProps);
+});
+
+
+previousPageButton.addEventListener("click", () => {
+    if (currentPage > 1) {
+        currentPage -= 1;
+        renderDataGrid(gridProps);
+    }
+});
+
+nextPageButton.addEventListener("click", () => {
+    currentPage += 1;
+    renderDataGrid(gridProps);
+});
+
+pageSizeSelect.addEventListener("change", () => {
+    pageSize = Number(pageSizeSelect.value);
+    currentPage = 1;
     renderDataGrid(gridProps);
 });
 
