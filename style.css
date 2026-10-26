@@ -1,0 +1,259 @@
+
+/* ========================================
+   1. Design tokens and reset
+======================================== */
+
+:root {
+    color-scheme: light;
+
+    font-family: Arial, Helvetica, sans-serif;
+    color: #1f2937;
+    background-color: #f8fafc;
+
+    line-height: 1.5;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+
+    --color-primary: #1d4ed8;
+    --color-border: #cbd5e1;
+    --color-surface: #ffffff;
+    --color-header: #e2e8f0;
+    --color-selected: #dbeafe;
+    --color-selected-hover: #bfdbfe;
+    --color-focus: #2563eb;
+}
+
+/* Predictable box sizing */
+* {
+    box-sizing: border-box;
+}
+
+html {
+    min-width: 320px;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+}
+
+button,
+input,
+select {
+    font: inherit;
+}
+
+button,
+select {
+    cursor: pointer;
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+/* ========================================
+   2. Page layout
+======================================== */
+
+body > header,
+body > main,
+body > footer {
+    width: min(100% - 2rem, 1200px);
+    margin-inline: auto;
+}
+
+body > header {
+    padding-block: 1.5rem;
+}
+
+body > main {
+    padding-block: 1rem 2rem;
+}
+
+body > footer {
+    padding-block: 1rem;
+    border-top: 1px solid var(--color-border);
+    color: #475569;
+}
+
+h1,
+h2 {
+    line-height: 1.2;
+}
+
+h1 {
+    font-size: clamp(1.5rem, 5vw, 2rem);
+}
+
+h2 {
+    font-size: 1.35rem;
+}
+
+/* ========================================
+   3. Search and pagination controls
+======================================== */
+
+#grid-filter-form {
+    display: grid;
+    gap: 0.5rem;
+    margin-block: 1rem;
+    max-width: 28rem;
+}
+
+#grid-filter,
+#page-size {
+    min-height: 2.75rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.375rem;
+    background-color: var(--color-surface);
+    color: inherit;
+}
+
+nav[aria-label="Employee records pagination"] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-block: 1rem;
+}
+
+nav[aria-label="Employee records pagination"] label {
+    font-weight: 600;
+}
+
+#previous-page,
+#next-page {
+    min-height: 2.75rem;
+    padding: 0.5rem 0.875rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.375rem;
+    background-color: var(--color-surface);
+    color: inherit;
+}
+
+#page-info {
+    font-weight: 600;
+}
+
+/* ========================================
+   4. Data Grid table
+======================================== */
+
+#employee-grid {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: var(--color-surface);
+}
+
+#employee-grid th,
+#employee-grid td {
+    padding: 0.75rem;
+    border: 1px solid var(--color-border);
+    text-align: left;
+    vertical-align: middle;
+    overflow-wrap: anywhere;
+}
+
+#employee-grid th {
+    background-color: var(--color-header);
+    font-weight: 700;
+}
+
+#employee-grid th button {
+    min-height: 2.75rem;
+    padding: 0.25rem;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+}
+
+#grid-body tr:nth-child(even) {
+    background-color: #f8fafc;
+}
+
+/* ========================================
+   5. Keyboard focus
+======================================== */
+
+#employee-grid [role="gridcell"]:focus {
+    outline: 3px solid var(--color-focus);
+    outline-offset: -3px;
+}
+
+#employee-grid th button:focus-visible,
+#previous-page:focus-visible,
+#next-page:focus-visible,
+#page-size:focus-visible,
+#grid-filter:focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+}
+
+/* ========================================
+   6. Selected row
+======================================== */
+
+#grid-body tr[aria-selected="true"] {
+    background-color: var(--color-selected);
+}
+
+#grid-body tr[aria-selected="true"] td {
+    color: #1e3a8a;
+}
+
+#grid-body tr[aria-selected="true"]:hover {
+    background-color: var(--color-selected-hover);
+}
+
+/* ========================================
+   7. Status message
+======================================== */
+
+#grid-status {
+    min-height: 1.5rem;
+    margin-block: 1rem;
+}
+
+/* ========================================
+   8. Responsive layout
+======================================== */
+
+@media (max-width: 600px) {
+    body > header,
+    body > main,
+    body > footer {
+        width: min(100% - 1rem, 1200px);
+    }
+
+    #employee-grid th,
+    #employee-grid td {
+        padding: 0.5rem 0.375rem;
+        font-size: 0.875rem;
+    }
+
+    nav[aria-label="Employee records pagination"] {
+        gap: 0.5rem;
+    }
+}
+
+/* ========================================
+   9. Reduced motion preference
+======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto;
+        animation: none;
+        transition: none;
+    }
+}
