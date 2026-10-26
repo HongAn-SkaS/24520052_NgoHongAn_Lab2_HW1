@@ -23,18 +23,22 @@ const gridStatus = document.querySelector("#grid-status");
 
 const gridFilter = document.querySelector("#grid-filter");
 
-
 const pageSizeSelect = document.querySelector("#page-size");
 const previousPageButton = document.querySelector("#previous-page");
 const nextPageButton = document.querySelector("#next-page");
 const pageInfo = document.querySelector("#page-info");
 
+const selectedEmployeeIds = new Set();
+
+let focusedCell = {
+    rowIndex: 0,
+    columnIndex: 0
+};
+
 let currentPage = 1;
 let pageSize = Number(pageSizeSelect.value);
 
-
 let filterQuery = "";
-
 
 const gridProps = {
     data: employeeData,
@@ -80,7 +84,6 @@ function compareValues(firstValue, secondValue) {
     );
 }
 
-
 function getFilteredData(data, columns) {
     if (filterQuery === "") {
         return data;
@@ -97,8 +100,6 @@ function getFilteredData(data, columns) {
         })
     );
 }
-
-
 
 function getSortedData(data) {
     if (sortState.key === null) {
@@ -129,7 +130,6 @@ function getSortedData(data) {
     return sortedData;
 }
 
-
 function handleSort(column) {
     if (column.sortable !== true) {
         return;
@@ -146,10 +146,10 @@ function handleSort(column) {
     }
 
     currentPage = 1;
-    
+    focusedCell = { rowIndex: 0, columnIndex: 0 };
+
     renderDataGrid(gridProps);
 }
-
 
 function getPaginatedData(data) {
     const totalPages = Math.ceil(data.length / pageSize);
@@ -168,6 +168,79 @@ function getPaginatedData(data) {
     };
 }
 
+function focusCell(rowIndex, columnIndex) {
+    const rows = gridBody.querySelectorAll("tr");
+
+    if (rows.length === 0 || gridProps.columns.length === 0) {
+        return;
+    }
+
+    const safeRowIndex = Math.max(
+        0,
+        Math.min(rowIndex, rows.length - 1)
+    );
+
+    const safeColumnIndex = Math.max(
+        0,
+        Math.min(columnIndex, gridProps.columns.length - 1)
+    );
+
+    for (const cell of gridBody.querySelectorAll('[role="gridcell"]')) {
+        cell.tabIndex = -1;
+    }
+
+    const targetCell = rows[safeRowIndex].querySelectorAll(
+        '[role="gridcell"]'
+    )[safeColumnIndex];
+
+    if (!targetCell) {
+        return;
+    }
+
+    focusedCell = {
+        rowIndex: safeRowIndex,
+        columnIndex: safeColumnIndex
+    };
+
+    targetCell.tabIndex = 0;
+    targetCell.focus();
+}
+
+function selectRow(rowIndex, toggleSelection = false) {
+    const filteredData = getFilteredData(
+        gridProps.data,
+        gridProps.columns
+    );
+
+    const sortedData = getSortedData(filteredData);
+    const pagination = getPaginatedData(sortedData);
+    const item = pagination.rows[rowIndex];
+
+    if (!item) {
+        return;
+    }
+
+    if (toggleSelection && selectedEmployeeIds.has(item.id)) {
+        selectedEmployeeIds.delete(item.id);
+    } else {
+        selectedEmployeeIds.add(item.id);
+    }
+
+    const row = gridBody.querySelectorAll("tr")[rowIndex];
+
+    if (row) {
+        row.setAttribute(
+            "aria-selected",
+            String(selectedEmployeeIds.has(item.id))
+        );
+    }
+
+    gridStatus.textContent = selectedEmployeeIds.has(item.id)
+        ? `${item.name} selected.`
+        : `${item.name} deselected.`;
+
+    gridProps.onRowSelect?.(item);
+}
 
 function renderDataGrid(props) {
     const errors = validateDataGridProps(props);
@@ -189,10 +262,7 @@ function renderDataGrid(props) {
         headerCell.setAttribute("role", "columnheader");
 
         if (sortState.key === column.accessorKey) {
-            headerCell.setAttribute(
-                "aria-sort",
-                sortState.direction
-            );
+            headerCell.setAttribute("aria-sort", sortState.direction);
         }
 
         if (column.sortable === true) {
@@ -231,25 +301,41 @@ function renderDataGrid(props) {
 
     gridHead.replaceChildren(headerRow);
 
-    
-    
-const filteredData = getFilteredData(props.data, props.columns);
-const sortedData = getSortedData(filteredData);
-const pagination = getPaginatedData(sortedData);
-const rows = [];
+    const filteredData = getFilteredData(props.data, props.columns);
+    const sortedData = getSortedData(filteredData);
+    const pagination = getPaginatedData(sortedData);
+    const rows = [];
 
+    focusedCell.rowIndex = Math.min(
+        focusedCell.rowIndex,
+        Math.max(0, pagination.rows.length - 1)
+    );
 
-    for (const [rowIndex, item] of pagination.rows.entries())  {
+    focusedCell.columnIndex = Math.min(
+        focusedCell.columnIndex,
+        Math.max(0, props.columns.length - 1)
+    );
+
+    for (const [rowIndex, item] of pagination.rows.entries()) {
         const row = document.createElement("tr");
+
         row.setAttribute("role", "row");
+        row.setAttribute(
+            "aria-selected",
+            String(selectedEmployeeIds.has(item.id))
+        );
 
         for (const [columnIndex, column] of props.columns.entries()) {
             const cell = document.createElement("td");
             const value = item[column.accessorKey];
 
             cell.setAttribute("role", "gridcell");
+
             cell.tabIndex =
-                rowIndex === 0 && columnIndex === 0 ? 0 : -1;
+                rowIndex === focusedCell.rowIndex &&
+                columnIndex === focusedCell.columnIndex
+                    ? 0
+                    : -1;
 
             cell.textContent = value == null ? "" : String(value);
 
@@ -259,19 +345,17 @@ const rows = [];
         rows.push(row);
     }
 
-    
-gridBody.replaceChildren(...rows);
+    gridBody.replaceChildren(...rows);
 
-gridStatus.textContent = filterQuery === ""
-    ? `${pagination.totalRecords} employee record${pagination.totalRecords === 1 ? "" : "s"} found.`
-    : `${pagination.totalRecords} matching employee record${pagination.totalRecords === 1 ? "" : "s"} found.`;
+    gridStatus.textContent = filterQuery === ""
+        ? `${pagination.totalRecords} employee record${pagination.totalRecords === 1 ? "" : "s"} found.`
+        : `${pagination.totalRecords} matching employee record${pagination.totalRecords === 1 ? "" : "s"} found.`;
 
-pageInfo.textContent =
-    `Page ${currentPage} of ${pagination.totalPages}`;
+    pageInfo.textContent =
+        `Page ${currentPage} of ${pagination.totalPages}`;
 
-previousPageButton.disabled = currentPage === 1;
-nextPageButton.disabled = currentPage >= pagination.totalPages;
-
+    previousPageButton.disabled = currentPage === 1;
+    nextPageButton.disabled = currentPage >= pagination.totalPages;
 }
 
 grid.setAttribute("aria-label", gridProps.ariaLabel);
@@ -284,27 +368,95 @@ document.querySelector("#grid-filter-form")
 gridFilter.addEventListener("input", () => {
     filterQuery = gridFilter.value.trim().toLocaleLowerCase();
     currentPage = 1;
+    focusedCell = { rowIndex: 0, columnIndex: 0 };
+
     renderDataGrid(gridProps);
 });
-
 
 previousPageButton.addEventListener("click", () => {
     if (currentPage > 1) {
         currentPage -= 1;
+        focusedCell = { rowIndex: 0, columnIndex: 0 };
+
         renderDataGrid(gridProps);
     }
 });
 
 nextPageButton.addEventListener("click", () => {
     currentPage += 1;
+    focusedCell = { rowIndex: 0, columnIndex: 0 };
+
     renderDataGrid(gridProps);
 });
 
 pageSizeSelect.addEventListener("change", () => {
     pageSize = Number(pageSizeSelect.value);
     currentPage = 1;
+    focusedCell = { rowIndex: 0, columnIndex: 0 };
+
     renderDataGrid(gridProps);
 });
 
+gridBody.addEventListener("keydown", (event) => {
+    const cell = event.target.closest('[role="gridcell"]');
+
+    if (!cell) {
+        return;
+    }
+
+    const row = cell.closest("tr");
+    const rowIndex = Array.from(gridBody.children).indexOf(row);
+    const cellIndex = Array.from(row.children).indexOf(cell);
+
+    switch (event.key) {
+        case "ArrowUp":
+            event.preventDefault();
+            focusCell(rowIndex - 1, cellIndex);
+            break;
+
+        case "ArrowDown":
+            event.preventDefault();
+            focusCell(rowIndex + 1, cellIndex);
+            break;
+
+        case "ArrowLeft":
+            event.preventDefault();
+            focusCell(rowIndex, cellIndex - 1);
+            break;
+
+        case "ArrowRight":
+            event.preventDefault();
+            focusCell(rowIndex, cellIndex + 1);
+            break;
+
+        case "Enter":
+            event.preventDefault();
+            selectRow(rowIndex);
+            break;
+
+        case " ":
+        case "Spacebar":
+            event.preventDefault();
+            selectRow(rowIndex, true);
+            break;
+
+        default:
+            break;
+    }
+});
+
+gridBody.addEventListener("click", (event) => {
+    const cell = event.target.closest('[role="gridcell"]');
+
+    if (!cell) {
+        return;
+    }
+
+    const row = cell.closest("tr");
+    const rowIndex = Array.from(gridBody.children).indexOf(row);
+    const cellIndex = Array.from(row.children).indexOf(cell);
+
+    focusCell(rowIndex, cellIndex);
+});
 
 renderDataGrid(gridProps);
